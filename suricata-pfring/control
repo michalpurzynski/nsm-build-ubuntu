@@ -1,0 +1,21 @@
+Source: suricata
+Section: net
+Priority: extra
+Maintainer: Michal Purzynski <mpurzynski@mozilla.com>
+Build-Depends: debhelper (>= 8.0.0), autotools-dev, libglib2.0-0, libgl1-mesa-glx, mime-support, libpopt0, libasound2, libmagic-dev, pkg-config, libpcre3, libnet1-dev, gawk, cpio, libyaml-dev, libpcre3-dbg, libpcre3-dev, libnet1-dev, libyaml-0-2, zlib1g, zlib1g-dev, libcap-ng-dev, libcap-ng0, libnss3-dev, libnspr4-dev, libluajit-5.1-dev, libjansson4, libjansson-dev, python-simplejson, python-distutils-extra, python-setuptools, python-instant, python-support, libgeoip1, libgeoip-dev, libnetfilter-queue-dev, libnetfilter-queue1, libnfnetlink-dev, libnfnetlink0, libmagic-dev, libmagic1, libnuma-dev, pf-ring-userspace, pfring-dkms
+Standards-Version: 3.9.3
+Homepage: http://www.openinfosecfoundation.org/
+
+Package: suricata
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, pf-ring-userspace, pfring-dkms, pfring-drivers-zc-dkms
+Conflicts: libhtp1
+Description: Suricata open source multi-thread IDS/IPS.
+ The Suricata Engine is an Open Source Next Generation Intrusion Detection and Prevention Engine. 
+  This engine is not intended to just replace or emulate the existing tools in the industry, but will bring
+  new ideas and technologies to the field. OISF is part of and funded by the Department of
+  Homeland Security's Directorate for Science and Technology HOST program (Homeland Open Security
+  Technology), by the the Navy's Space and Naval Warfare Systems Command (SPAWAR), as well as through the
+  very generous support of the members of the OISF Consortium. More information about the Consortium is
+  available, as well as a list of our current Consortium Members. The Suricata Engine and the HTP Library
+  are available to use under the GPLv2.

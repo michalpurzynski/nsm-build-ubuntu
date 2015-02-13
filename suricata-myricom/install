@@ -1,0 +1,4 @@
+rules/*.rules etc/nsm/rules/
+suricata.yaml.in etc/nsm/templates/suricata/
+classification.config etc/nsm/templates/suricata/
+reference.config etc/nsm/templates/suricata/

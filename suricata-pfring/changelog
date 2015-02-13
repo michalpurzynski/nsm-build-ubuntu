@@ -1,0 +1,5 @@
+suricata (2.1beta3-0ubuntu0mozilla1pfring1) precise; urgency=low
+
+  * Initial release - Suricata 2.1beta3
+
+ -- Michal Purzynski <mpurzynski@mozilla.com>  Thu, 21 Jan 2015 19:58:56 +0100
