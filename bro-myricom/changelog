@@ -1,0 +1,5 @@
+bro (2.3.2-0ubuntu0mozilla6myricom3) precise; urgency=low
+
+  * Initial release - Bro 2.3.2
+
+ -- Michal Purzynski <mpurzynski@mozilla.com>  Thu, 21 Jan 2015 19:58:56 +0100

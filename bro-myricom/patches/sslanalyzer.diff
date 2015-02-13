@@ -1,0 +1,139 @@
+--- a/src/analyzer/protocol/ssl/ssl-analyzer.pac
++++ b/src/analyzer/protocol/ssl/ssl-analyzer.pac
+@@ -112,7 +112,10 @@
+ 					cipher_suites24 : uint24[]) : bool
+ 		%{
+ 		if ( ! version_ok(version) )
++			{
+ 			bro_analyzer()->ProtocolViolation(fmt("unsupported client SSL version 0x%04x", version));
++			bro_analyzer()->SetSkip(true);
++			}
+ 		else
+ 			bro_analyzer()->ProtocolConfirmation();
+ 
+@@ -152,7 +155,10 @@
+ 					comp_method : uint8) : bool
+ 		%{
+ 		if ( ! version_ok(version) )
++			{
+ 			bro_analyzer()->ProtocolViolation(fmt("unsupported server SSL version 0x%04x", version));
++			bro_analyzer()->SetSkip(true);
++			}
+ 
+ 		if ( ssl_server_hello )
+ 			{
+@@ -202,6 +208,7 @@
+ 			// This should be impossible due to the binpac parser
+ 			// and protocol description
+ 			bro_analyzer()->ProtocolViolation(fmt("Impossible extension length: %lu", length));
++			bro_analyzer()->SetSkip(true);
+ 			return true;
+ 			}
+ 
+@@ -392,7 +399,11 @@
+ 	function proc_check_v2_server_hello_version(version: uint16) : bool
+ 		%{
+ 		if ( version != SSLv20 )
++			{
+ 			bro_analyzer()->ProtocolViolation(fmt("Invalid version in SSL server hello. Version: %d", version));
++			bro_analyzer()->SetSkip(true);
++			return false;
++			}
+ 
+ 		return true;
+ 		%}
+@@ -479,13 +490,13 @@
+ };
+ 
+ refine typeattr V2ServerHello += &let {
+-	proc : bool = $context.connection.proc_server_hello(rec, server_version, 0,
+-				conn_id_data, 0, 0, ciphers, 0);
+-
+ 	check_v2 : bool = $context.connection.proc_check_v2_server_hello_version(server_version);
+ 
++	proc : bool = $context.connection.proc_server_hello(rec, server_version, 0,
++				conn_id_data, 0, 0, ciphers, 0) &requires(check_v2) &if(check_v2 == true);
++
+ 	cert : bool = $context.connection.proc_v2_certificate(rec, cert_data)
+-		&requires(proc);
++		&requires(proc) &requires(check_v2) &if(check_v2 == true);
+ };
+ 
+ refine typeattr Certificate += &let {
+--- a/src/analyzer/protocol/ssl/ssl-protocol.pac
++++ b/src/analyzer/protocol/ssl/ssl-protocol.pac
+@@ -36,7 +36,7 @@
+ } &length = length+5, &byteorder=bigendian,
+ 	&let {
+ 	version : int =
+-		$context.connection.determine_ssl_record_layer(head0, head1, head2, head3, head4);
++		$context.connection.determine_ssl_record_layer(head0, head1, head2, head3, head4, is_orig);
+ 
+ 	content_type : int = case version of {
+ 		SSLv20 -> head2+300;
+@@ -748,7 +748,7 @@
+ 		%}
+ 
+ 	function determine_ssl_record_layer(head0 : uint8, head1 : uint8,
+-					head2 : uint8, head3: uint8, head4: uint8) : int
++					head2 : uint8, head3: uint8, head4: uint8, is_orig: bool) : int
+ 		%{
+ 		// re-check record layer version to be sure that we still are synchronized with
+ 		// the data stream
+@@ -759,6 +759,7 @@
+ 			     version != TLSv11 && version != TLSv12 )
+ 				{
+ 				bro_analyzer()->ProtocolViolation(fmt("Invalid version late in TLS connection. Packet reported version: %d", version));
++				bro_analyzer()->SetSkip(true);
+ 				return UNKNOWN_VERSION;
+ 				}
+ 			}
+@@ -768,13 +769,14 @@
+ 
+ 		if ( head0 & 0x80 )
+ 			{
+-			if ( head2 == 0x01 ) // SSLv2 client hello.
++			if ( head2 == 0x01 && is_orig ) // SSLv2 client hello.
+ 				{
+ 				uint16 version = (head3 << 8) | head4;
+ 				if ( version != SSLv20 && version != SSLv30 && version != TLSv10 &&
+ 				     version != TLSv11 && version != TLSv12 )
+ 					{
+ 					bro_analyzer()->ProtocolViolation(fmt("Invalid version in SSL client hello. Version: %d", version));
++					bro_analyzer()->SetSkip(true);
+ 					return UNKNOWN_VERSION;
+ 					}
+ 
+@@ -782,7 +784,7 @@
+ 					return SSLv20;
+ 				}
+ 
+-			else if ( head2 == 0x04 ) // SSLv2 server hello. This connection will continue using SSLv2.
++			else if ( head2 == 0x04 && head4 < 2 && ! is_orig ) // SSLv2 server hello. This connection will continue using SSLv2.
+ 				{
+ 				record_layer_version_ = SSLv20;
+ 				return SSLv20;
+@@ -791,6 +793,7 @@
+ 			else // this is not SSL or TLS.
+ 				{
+ 				bro_analyzer()->ProtocolViolation(fmt("Invalid headers in SSL connection. Head1: %d, head2: %d, head3: %d", head1, head2, head3));
++				bro_analyzer()->SetSkip(true);
+ 				return UNKNOWN_VERSION;
+ 				}
+ 			}
+@@ -800,6 +803,7 @@
+ 		     version != TLSv11 && version != TLSv12 )
+ 			{
+ 			bro_analyzer()->ProtocolViolation(fmt("Invalid version in TLS connection. Version: %d", version));
++			bro_analyzer()->SetSkip(true);
+ 			return UNKNOWN_VERSION;
+ 			}
+ 
+@@ -810,6 +814,7 @@
+ 			}
+ 
+ 		bro_analyzer()->ProtocolViolation(fmt("Invalid type in TLS connection. Version: %d, Type: %d", version, head0));
++		bro_analyzer()->SetSkip(true);
+ 		return UNKNOWN_VERSION;
+ 		%}
+ 
