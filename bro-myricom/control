@@ -7,14 +7,14 @@ Build-Depends: debhelper (>= 8.0.0), autotools-dev,
  flex, bison, libpcap-dev,
  libssl-dev, python-dev, swig,
  zlib1g-dev, libmagic-dev, libgeoip-dev,
- sendmail, libcap2-bin, pf-ring-userspace, pfring-dkms, pfring-drivers-zc-dkms,
+ sendmail, libcap2-bin, myri-snf-all,
  libtcmalloc-minimal0, libpcre3-dev, libgoogle-perftools-dev, libnuma-dev
 Standards-Version: 3.9.3
 Homepage: http://bro-ids.org
 
 Package: bro
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, pf-ring-userspace, pfring-dkms, pfring-drivers-zc-dkms,
+Depends: ${shlibs:Depends}, ${misc:Depends}, myri-snf-all,
  gawk, libcap2-bin
 Description: The Bro Network Security Monitor
  Bro is a powerful network analysis framework that is much different from the typical IDS you may know.
